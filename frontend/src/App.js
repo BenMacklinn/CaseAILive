@@ -50,6 +50,8 @@ import { liveType } from './utils/liveType.js';
 import QuickReferenceGuide from './components/QuickReferenceGuide';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import SendIcon from '@mui/icons-material/Send';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Set API_BASE_URL based on environment
 let API_BASE_URL;
@@ -499,6 +501,46 @@ function Dashboard({ cases, onClose }) {
 
 function RainbowLoadingDots({ message = "Generating your case..." }) {
   // Animated turquoise-to-purple gradient bouncing dots
+  // Add cycling quotes
+  const quotes = React.useMemo(() => {
+    const arr = [
+      "You need some sun.",
+      "Calm down its loading.",
+      "We had budget constraints, please donate... please.",
+      "Four eggs, sourdough bread, and a green apple.",
+      "I'm not sure if you're ready for this.",
+      "Vibe coding is hard.",
+      "Hey you look great today.",
+      "UFC, KFC, GPT, Lakers in 5",
+      "No tarrifs on CaseAI.",
+      "Seahawks should have ran the ball.",
+      "Why are you staring?",
+      "Looks like you need some sleep.",
+      "We spent all of our budget on this loading screen. Worth it?",
+      "Sorry for the delay, blame the intern.",
+      "We are hiring full stack vibe coders.",
+      "Thanks for taking your time to be here! Love the CaseAI team."
+    ];
+    // Fisher-Yates shuffle
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, []);
+  const [quoteIndex, setQuoteIndex] = React.useState(0);
+  const [fade, setFade] = React.useState(true);
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setQuoteIndex((prev) => (prev + 1) % quotes.length);
+        setFade(true);
+      }, 300); // fade out before changing
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Box sx={{
       position: 'fixed',
@@ -535,6 +577,27 @@ function RainbowLoadingDots({ message = "Generating your case..." }) {
       </Box>
       <Typography sx={{ mt: 4, fontWeight: 700, fontSize: 22, color: '#222', letterSpacing: 1.2 }}>
         {message}
+      </Typography>
+      <Typography
+        sx={{
+          mt: 3,
+          fontSize: 18,
+          background: 'linear-gradient(45deg, #5FFBF1 0%, #3BA9FF 50%, #A385FF 100%)',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          color: 'transparent',
+          minHeight: 32,
+          fontWeight: 700,
+          fontFamily: 'inherit',
+          opacity: fade ? 1 : 0,
+          transition: 'opacity 0.3s',
+          textAlign: 'center',
+          maxWidth: 600,
+          fontStyle: 'italic',
+        }}
+      >
+        {`"${quotes[quoteIndex]}"`}
       </Typography>
       <style>{`
         @keyframes gradient-bounce {
@@ -838,26 +901,42 @@ function Landing({ onStart }) {
               flexShrink: 0,
               flexGrow: 0
             }}>
-              <Card elevation={0} sx={{ 
-                borderRadius: 4, 
-                p: 3, 
-                minHeight: 220, 
-                height: '100%', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                backgroundColor: '#fff',
-                opacity: 1, // <-- force full opacity
+              <Box sx={{
+                borderRadius: 4,
+                p: 3,
+                minHeight: 220,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#ffffff',
+                background: '#ffffff',
+                opacity: 1,
                 border: '2.5px solid #000',
                 boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
                 position: 'relative',
                 overflow: 'visible',
-                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
+                zIndex: 2,
+                isolation: 'isolate',
+                backdropFilter: 'none',
+                WebkitBackdropFilter: 'none',
+                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s',
                 '&:hover': {
-                  background: '#fff',
-                  filter: 'brightness(1.15)',
+                  backgroundColor: '#ffffff',
+                  background: '#ffffff',
                   transform: 'translateY(-4px)',
+                },
+                '::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: '#ffffff',
+                  borderRadius: 'inherit',
+                  zIndex: -1,
                 },
                 '::after': {
                   content: '""',
@@ -895,33 +974,49 @@ function Landing({ onStart }) {
                 <Typography variant="body2" sx={{ color: '#000' }} align="center">
                   Practice with actual MBB-style cases covering market entry, M&A, pricing strategy, and more
                 </Typography>
-              </Card>
+              </Box>
             </Grid>
             <Grid sx={{ 
               width: { xs: '100%', md: '33.33%' },
               flexShrink: 0,
               flexGrow: 0
             }}>
-              <Card elevation={0} sx={{ 
-                borderRadius: 4, 
-                p: 3, 
-                minHeight: 220, 
-                height: '100%', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                backgroundColor: '#fff',
-                opacity: 1, // <-- force full opacity
+              <Box sx={{
+                borderRadius: 4,
+                p: 3,
+                minHeight: 220,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#ffffff',
+                background: '#ffffff',
+                opacity: 1,
                 border: '2.5px solid #000',
                 boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
                 position: 'relative',
                 overflow: 'visible',
-                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
+                zIndex: 2,
+                isolation: 'isolate',
+                backdropFilter: 'none',
+                WebkitBackdropFilter: 'none',
+                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s',
                 '&:hover': {
-                  background: '#fff',
-                  filter: 'brightness(1.15)',
+                  backgroundColor: '#ffffff',
+                  background: '#ffffff',
                   transform: 'translateY(-4px)',
+                },
+                '::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: '#ffffff',
+                  borderRadius: 'inherit',
+                  zIndex: -1,
                 },
                 '::after': {
                   content: '""',
@@ -959,33 +1054,49 @@ function Landing({ onStart }) {
                 <Typography variant="body2" sx={{ color: '#000' }} align="center">
                   Get instant feedback on your structure, insights, and quantitative analysis skills
                 </Typography>
-              </Card>
+              </Box>
             </Grid>
             <Grid sx={{ 
               width: { xs: '100%', md: '33.33%' },
               flexShrink: 0,
               flexGrow: 0
             }}>
-              <Card elevation={0} sx={{ 
-                borderRadius: 4, 
-                p: 3, 
-                minHeight: 220, 
-                height: '100%', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                backgroundColor: '#fff',
-                opacity: 1, // <-- force full opacity
+              <Box sx={{
+                borderRadius: 4,
+                p: 3,
+                minHeight: 220,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#ffffff',
+                background: '#ffffff',
+                opacity: 1,
                 border: '2.5px solid #000',
                 boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
                 position: 'relative',
                 overflow: 'visible',
-                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
+                zIndex: 2,
+                isolation: 'isolate',
+                backdropFilter: 'none',
+                WebkitBackdropFilter: 'none',
+                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s',
                 '&:hover': {
-                  background: '#fff',
-                  filter: 'brightness(1.15)',
+                  backgroundColor: '#ffffff',
+                  background: '#ffffff',
                   transform: 'translateY(-4px)',
+                },
+                '::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: '#ffffff',
+                  borderRadius: 'inherit',
+                  zIndex: -1,
                 },
                 '::after': {
                   content: '""',
@@ -1023,7 +1134,7 @@ function Landing({ onStart }) {
                 <Typography variant="body2" sx={{ color: '#000' }} align="center">
                   Learn from patterns of successful candidates and improve with each practice session
                 </Typography>
-              </Card>
+              </Box>
             </Grid>
           </Grid>
         )}
@@ -1133,6 +1244,81 @@ function MobileWarningModal({ open, onClose }) {
   );
 }
 
+function LinkedInFloatingButton() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  return (
+    <Box sx={{ position: 'fixed', bottom: 24, left: 24, zIndex: 9999, display: 'flex', gap: 2 }}>
+      <IconButton
+        href="https://www.linkedin.com/company/case-ai"
+        target="_blank"
+        rel="noopener noreferrer"
+        sx={{
+          backgroundColor: '#0077B5',
+          color: '#fff',
+          width: 48,
+          height: 48,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          transition: 'all 0.3s cubic-bezier(.4,2,.6,1)',
+          '&:hover': {
+            backgroundColor: '#006399',
+            transform: 'translateY(-4px) scale(1.05)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          },
+          '&:active': {
+            transform: 'translateY(-2px) scale(0.98)',
+          },
+        }}
+      >
+        <LinkedInIcon sx={{ fontSize: 28 }} />
+      </IconButton>
+      {!isMobile && (
+        <Button
+          href="https://docs.google.com/forms/d/e/1FAIpQLSfs_huqeb4Fe7PLshbH0qI3N20PVYt8D6vDDX1vzbw4TOwGgA/viewform?usp=header"
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="contained"
+          sx={{
+            backgroundColor: '#fff',
+            color: '#111',
+            fontWeight: 700,
+            borderRadius: 3,
+            height: 48,
+            minWidth: 120,
+            px: 3,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
+            textTransform: 'none',
+            fontSize: 16,
+            border: '2px solid #3BA9FF',
+            transition: 'all 0.3s cubic-bezier(.4,2,.6,1)',
+            ml: 1,
+            backgroundClip: 'padding-box',
+            '& .gradient-text': {
+              background: 'linear-gradient(45deg, #5FFBF1 0%, #3BA9FF 50%, #A385FF 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              color: 'transparent',
+              fontWeight: 700,
+            },
+            '&:hover': {
+              backgroundColor: '#f3f4f6',
+              borderColor: '#A385FF',
+              transform: 'translateY(-4px) scale(1.05)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+            },
+            '&:active': {
+              transform: 'translateY(-2px) scale(0.98)',
+            },
+          }}
+        >
+          <span className="gradient-text">User Feedback</span>
+        </Button>
+      )}
+    </Box>
+  );
+}
+
 function App() {
   const [showInterview, setShowInterview] = useState(false);
   const [caseOptions, setCaseOptions] = useState({ length: 'standard', style: 'standard', industry: 'general' });
@@ -1197,6 +1383,10 @@ function App() {
   // Add new state for pending response audio
   const [pendingResponseAudio, setPendingResponseAudio] = useState(null);
   const [isGeneratingReportCard, setIsGeneratingReportCard] = useState(false);
+  // Disclaimer popup state
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [showDisclaimer, setShowDisclaimer] = useState(!isMobile);
   
   // Add this useEffect near the top of the component, after the state declarations
   useEffect(() => {
@@ -2096,7 +2286,7 @@ function App() {
         flexDirection: 'column',
         transition: 'opacity 0.4s',
       }}>
-        <RainbowLoadingDots message="Generating Report Card..." />
+        <RainbowLoadingDots message="Generating report card..." />
       </Box>
     );
   }
@@ -2113,6 +2303,10 @@ function App() {
       />
       {showInterview ? (
         <>
+          {/* Logo in top-left corner, same as landing page */}
+          <Box sx={{ position: 'absolute', top: 24, left: 24, zIndex: 2 }}>
+            <LogoWithAnimatedOutline />
+          </Box>
           <Box sx={backgroundWrapperSx} />
           {/* Add loading screen */}
           {loadingInitialQuestion && <RainbowLoadingDots />}
@@ -2918,6 +3112,28 @@ function App() {
           setShowInterview(true);
           setTimeout(() => getInitialQuestion(opts), 0);
         }} />
+      )}
+      {/* Move LinkedInFloatingButton outside the conditional so it always renders */}
+      <LinkedInFloatingButton />
+      {/* Desktop-only disclaimer popup */}
+      {!isMobile && (
+        <Dialog open={showDisclaimer} onClose={() => setShowDisclaimer(false)} maxWidth="xs" fullWidth>
+          <Box sx={{ bgcolor: '#fdecea', p: 3, borderRadius: 0, border: '1.5px solid #fca5a5', position: 'relative' }}>
+            <IconButton
+              onClick={() => setShowDisclaimer(false)}
+              sx={{ position: 'absolute', top: 8, right: 8, color: '#b91c1c' }}
+              size="small"
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ color: '#b91c1c', fontWeight: 700, mb: 1 }}>
+              Notice Regarding Loading Times
+            </Typography>
+            <Typography sx={{ color: '#7f1d1d', fontSize: 16, fontWeight: 500 }}>
+              Due to high user demand and current infrastructure limitations, you may experience longer loading times during peak periods. We appreciate your patience and understanding as we continue to optimize and scale our platform to serve you better.
+            </Typography>
+          </Box>
+        </Dialog>
       )}
     </>
   );
