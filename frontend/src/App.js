@@ -1231,24 +1231,6 @@ function App() {
     }
   }, [messages]);
 
-  // In the useEffect that watches messages, replace playAudio call with pendingResponseAudio logic
-  useEffect(() => {
-    if (!messages.length) return;
-    // Find the last AI message (excluding the initial one)
-    if (messages.length > 1) {
-      const lastIndex = messages.length - 1;
-      const lastMsg = messages[lastIndex];
-      if (
-        lastMsg.role === 'ai' &&
-        lastMsg.audio_url &&
-        typeof lastMsg.audio_url === 'string' &&
-        lastMsg.audio_url.trim()
-      ) {
-        setPendingResponseAudio({ url: lastMsg.audio_url, text: lastMsg.text, aiIndex: lastIndex });
-      }
-    }
-  }, [messages]);
-
   const getInitialQuestion = async (opts) => {
     try {
       setLoadingInitialQuestion(true);
@@ -1557,13 +1539,14 @@ function App() {
           { role: 'ai', text: response.data.response }
         ]);
         // If backend signals case end, show feedback
-        if (response.data.response && response.data.response.includes('case is now complete')) {
-          setCaseEnded(true);
-          setIsCaseStarted(false);
-          setShowFeedback(true);
-          await getFeedback();
-          return;
-        }
+        // (Removed: auto-end logic based on 'case is now complete')
+        // if (response.data.response && response.data.response.includes('case is now complete')) {
+        //   setCaseEnded(true);
+        //   setIsCaseStarted(false);
+        //   setShowFeedback(true);
+        //   await getFeedback();
+        //   return;
+        // }
         // Play audio and trigger typewriter for the new AI message
         const aiIndex = messages.length + 1; // index of the new AI message
         await playAudio(response.data.audio_url, response.data.response, aiIndex);
@@ -1881,9 +1864,8 @@ function App() {
       const data = await response.json();
       if (data) {
         setMessages((prev) => [...prev, { role: 'ai', text: data.response, audio_url: data.audio_url }]);
-        if (data.audio_url) {
-          await playAudio(data.audio_url, data.response, messages.length + 1);
-        }
+        // Always call playAudio, even if no audio_url
+        await playAudio(data.audio_url || '', data.response, messages.length + 1);
       }
     } catch (error) {
       setError('Failed to send text to AI.');
@@ -1998,14 +1980,6 @@ function App() {
       setPendingInitialAudio(null);
     }
   }, [pendingInitialAudio, audioRef.current]);
-
-  // Add a useEffect to play pendingResponseAudio when audioRef is ready
-  useEffect(() => {
-    if (pendingResponseAudio && audioRef.current) {
-      playAudio(pendingResponseAudio.url, pendingResponseAudio.text, pendingResponseAudio.aiIndex);
-      setPendingResponseAudio(null);
-    }
-  }, [pendingResponseAudio, audioRef.current]);
 
   // Place the audio element here, always rendered
   // (remove any duplicate or conditional rendering below)
@@ -2267,7 +2241,7 @@ function App() {
                           }
                         }}
                       />
-                      {message.role === 'ai' && message.audio_url && isPlaying && playingAiIndex === index && (
+                      {message.role === 'ai' && isPlaying && playingAiIndex === index && (
                         <>
                           <IconButton 
                             size="small" 
@@ -2321,31 +2295,6 @@ function App() {
               </Box>
               {/* Bottom controls: recording button, text input toggle */}
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 4, position: 'fixed', bottom: 24, left: 0, right: 0, zIndex: 10 }}>
-                {/* Keyboard button to show/hide text input */}
-                <IconButton
-                  onClick={() => { if (!isPlaying) setTextMode((prev) => !prev); }}
-                  size="small"
-                  disabled={isPlaying}
-                  sx={{
-                    background: 'linear-gradient(90deg, #111 30%, #333 90%)',
-                    color: '#fff',
-                    borderRadius: 3,
-                    width: 48,
-                    height: 48,
-                    minWidth: 48,
-                    minHeight: 48,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-                    opacity: isPlaying ? 0.5 : 1,
-                    pointerEvents: isPlaying ? 'none' : 'auto',
-                    cursor: isPlaying ? 'not-allowed' : 'pointer',
-                    transition: 'background 0.2s, opacity 0.2s',
-                    '&:hover': {
-                      background: 'linear-gradient(90deg, #222 30%, #444 90%)',
-                    },
-                  }}
-                >
-                  {textMode ? <MicIcon /> : <ChatIcon sx={{ color: '#fff' }} />}
-                </IconButton>
                 {/* Main recording button and timer, etc. (existing controls) */}
                 {!textMode && (
                   <Button

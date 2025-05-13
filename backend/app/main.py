@@ -685,9 +685,7 @@ async def cleanup_audio(session_id: str = Form(...)):
 
 @app.post("/api/end-case")
 async def end_case(session_id: str = Form(...)):
-    # Simulate the rest of the case, assign 0s for skipped sections, and generate feedback
-    if session_id in ended_sessions:
-        return {"status": "already ended"}
+    # Always allow feedback generation if session exists
     if session_id not in conversation_history:
         return {"status": "no session"}
     # Determine which phases are missing
@@ -708,36 +706,7 @@ async def end_case(session_id: str = Form(...)):
             user_answers.append('[No answer provided for this section]')
         user_transcript = '\n\n'.join(user_answers)
         if session_answer_keys:
-            feedback_prompt = f"""You are a Bain & Company case interviewer providing detailed feedback. 
-Evaluate the interviewee's performance against these answer keys:
-
-Framework Answer Key:
-{session_answer_keys['framework']}
-
-Quantitative Answer Key:
-{session_answer_keys['quantitative']}
-
-Qualitative Answer Key:
-{session_answer_keys['qualitative']}
-
-CEO Synthesis Answer Key:
-{session_answer_keys['ceo_synthesis']}
-
-Candidate's Transcript:
-{user_transcript}
-
-Evaluate the interviewee's performance as follows:
-- Give an overall score out of 100
-- Provide a breakdown of the score for each question type:
-    1. Framework (out of 25)
-    2. Quantitative (out of 25)
-    3. Qualitative (out of 25)
-    4. Recommendation/Synthesis (out of 25)
-- For each section, explain how their answer compared to the answer key
-- For any section skipped, assign a score of 0 and note it was skipped. Do not give partial credit for awareness or intent if no answer was given.
-- Provide specific, actionable feedback for improvement
-- Highlight what went well, where they went wrong, and what you wanted to see from them
-- Be concise, professional, and realistic."""
+            feedback_prompt = f"""You are a Bain & Company case interviewer providing detailed feedback. \nEvaluate the interviewee's performance against these answer keys:\n\nFramework Answer Key:\n{session_answer_keys['framework']}\n\nQuantitative Answer Key:\n{session_answer_keys['quantitative']}\n\nQualitative Answer Key:\n{session_answer_keys['qualitative']}\n\nCEO Synthesis Answer Key:\n{session_answer_keys['ceo_synthesis']}\n\nCandidate's Transcript:\n{user_transcript}\n\nEvaluate the interviewee's performance as follows:\n- Give an overall score out of 100\n- Provide a breakdown of the score for each question type:\n    1. Framework (out of 25)\n    2. Quantitative (out of 25)\n    3. Qualitative (out of 25)\n    4. Recommendation/Synthesis (out of 25)\n- For each section, explain how their answer compared to the answer key\n- For any section skipped, assign a score of 0 and note it was skipped. Do not give partial credit for awareness or intent if no answer was given.\n- Provide specific, actionable feedback for improvement\n- Highlight what went well, where they went wrong, and what you wanted to see from them\n- Be concise, professional, and realistic."""
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
