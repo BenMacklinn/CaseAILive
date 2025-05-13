@@ -52,6 +52,7 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import SendIcon from '@mui/icons-material/Send';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import CloseIcon from '@mui/icons-material/Close';
+import ReactGA from 'react-ga4';
 
 // Set API_BASE_URL based on environment
 let API_BASE_URL;
@@ -499,9 +500,8 @@ function Dashboard({ cases, onClose }) {
   );
 }
 
-function RainbowLoadingDots({ message = "Generating your case..." }) {
-  // Animated turquoise-to-purple gradient bouncing dots
-  // Add cycling quotes
+// Shared cycling quote component for loading screens
+function CyclingQuotes() {
   const quotes = React.useMemo(() => {
     const arr = [
       "You need some sun.",
@@ -510,7 +510,7 @@ function RainbowLoadingDots({ message = "Generating your case..." }) {
       "Four eggs, sourdough bread, and a green apple.",
       "I'm not sure if you're ready for this.",
       "Vibe coding is hard.",
-      "Hey you look great today.",
+      "Hey, you look great today.",
       "UFC, KFC, GPT, Lakers in 5",
       "No tarrifs on CaseAI.",
       "Seahawks should have ran the ball.",
@@ -539,8 +539,35 @@ function RainbowLoadingDots({ message = "Generating your case..." }) {
       }, 300); // fade out before changing
     }, 3500);
     return () => clearInterval(interval);
-  }, []);
+  }, [quotes.length]);
+  return (
+    <Typography
+      sx={{
+        mt: 3,
+        fontSize: 18,
+        background: 'linear-gradient(45deg, #5FFBF1 0%, #3BA9FF 50%, #A385FF 100%)',
+        backgroundClip: 'text',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        color: 'transparent',
+        minHeight: 32,
+        fontWeight: 700,
+        fontFamily: 'inherit',
+        opacity: fade ? 1 : 0,
+        transition: 'opacity 0.3s',
+        textAlign: 'center',
+        maxWidth: 600,
+        fontStyle: 'italic',
+      }}
+    >
+      {`"${quotes[quoteIndex]}"`}
+    </Typography>
+  );
+}
 
+function RainbowLoadingDots({ message = "Generating your case..." }) {
+  // Animated turquoise-to-purple gradient bouncing dots
+  // Remove cycling quotes logic from here, use CyclingQuotes only
   return (
     <Box sx={{
       position: 'fixed',
@@ -578,27 +605,7 @@ function RainbowLoadingDots({ message = "Generating your case..." }) {
       <Typography sx={{ mt: 4, fontWeight: 700, fontSize: 22, color: '#222', letterSpacing: 1.2 }}>
         {message}
       </Typography>
-      <Typography
-        sx={{
-          mt: 3,
-          fontSize: 18,
-          background: 'linear-gradient(45deg, #5FFBF1 0%, #3BA9FF 50%, #A385FF 100%)',
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          color: 'transparent',
-          minHeight: 32,
-          fontWeight: 700,
-          fontFamily: 'inherit',
-          opacity: fade ? 1 : 0,
-          transition: 'opacity 0.3s',
-          textAlign: 'center',
-          maxWidth: 600,
-          fontStyle: 'italic',
-        }}
-      >
-        {`"${quotes[quoteIndex]}"`}
-      </Typography>
+      <CyclingQuotes />
       <style>{`
         @keyframes gradient-bounce {
           0%, 100% { transform: translateY(0); filter: brightness(1); }
@@ -756,6 +763,12 @@ function Landing({ onStart }) {
     }
   };
 
+  // Initialize Google Analytics 4
+  useEffect(() => {
+    ReactGA.initialize('G-DL2R9PEKTX');
+    ReactGA.send({ hitType: 'pageview', page: window.location.pathname + window.location.search });
+  }, []);
+
   return (
     <Box sx={backgroundWrapperSx}>
       <Box sx={{
@@ -853,12 +866,12 @@ function Landing({ onStart }) {
           color="primary"
           size={isMobile ? 'medium' : 'large'}
           sx={{
-            px: { xs: 5, md: 8 }, // bigger on mobile
-            py: { xs: 2, md: 3 }, // bigger on mobile
-            fontSize: { xs: 22, md: 28 }, // bigger on mobile
+            px: { xs: 5, md: 8 },
+            py: { xs: 2, md: 3 },
+            fontSize: { xs: 22, md: 28 },
             borderRadius: 4,
             mb: { xs: 3, md: 5 },
-            mt: { xs: 2, md: 0 }, // more space above button on mobile
+            mt: { xs: 2, md: 0 },
             fontWeight: 800,
             letterSpacing: 1.5,
             color: '#fff',
@@ -889,7 +902,14 @@ function Landing({ onStart }) {
               WebkitTextFillColor: 'transparent',
             },
           }}
-          onClick={handleStartClick}
+          onClick={() => {
+            ReactGA.event({
+              category: 'Button',
+              action: 'Click',
+              label: 'Start Practice Case'
+            });
+            handleStartClick();
+          }}
         >
           <span className="gradient-text">START PRACTICE CASE</span>
         </Button>
@@ -1269,6 +1289,13 @@ function LinkedInFloatingButton() {
             transform: 'translateY(-2px) scale(0.98)',
           },
         }}
+        onClick={() => {
+          ReactGA.event({
+            category: 'Button',
+            action: 'Click',
+            label: 'LinkedIn'
+          });
+        }}
       >
         <LinkedInIcon sx={{ fontSize: 28 }} />
       </IconButton>
@@ -1310,6 +1337,13 @@ function LinkedInFloatingButton() {
             '&:active': {
               transform: 'translateY(-2px) scale(0.98)',
             },
+          }}
+          onClick={() => {
+            ReactGA.event({
+              category: 'Button',
+              action: 'Click',
+              label: 'User Feedback'
+            });
           }}
         >
           <span className="gradient-text">User Feedback</span>
@@ -2272,22 +2306,7 @@ function App() {
   // Custom RainbowLoadingDots for report card
   function ReportCardLoading() {
     return (
-      <Box sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        bgcolor: 'rgba(255,255,255,0.98)',
-        zIndex: 3000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        transition: 'opacity 0.4s',
-      }}>
-        <RainbowLoadingDots message="Generating report card..." />
-      </Box>
+      <RainbowLoadingDots message="Generating report card..." />
     );
   }
 
@@ -3069,7 +3088,7 @@ function App() {
               <Button onClick={() => { setShowFeedbackConfirm(false); endCaseAndGetFeedback(); }} variant="contained" sx={{ borderRadius: 2, fontWeight: 700, px: 4, background: 'linear-gradient(45deg, #000 30%, #333 90%)', color: '#fff', boxShadow: 'none', '&:hover': { background: 'linear-gradient(45deg, #111 30%, #444 90%)', boxShadow: 'none' } }}>Yes, End Case</Button>
             </DialogActions>
           </Dialog>
-          {isGeneratingReportCard && <ReportCardLoading />}
+          {isGeneratingReportCard && <RainbowLoadingDots message="Generating report card..." />}
         </>
       ) : (
         <Landing onStart={(opts) => {
