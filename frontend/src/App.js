@@ -20,7 +20,9 @@ import {
   Grid,
   Card,
   CardContent,
-  Avatar
+  Avatar,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
@@ -93,6 +95,7 @@ const backgroundWrapperSx = {
   zIndex: 0,
   overflow: 'hidden',
   background: '#f8fafc',
+  pointerEvents: 'none',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -677,30 +680,41 @@ function LogoWithAnimatedOutline() {
 
 function Landing({ onStart }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
   const [caseOptions, setCaseOptions] = useState({ length: 'standard', style: 'standard', industry: 'general' });
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const handleStartClick = () => {
+    if (isMobile && isMobileDevice()) {
+      setShowMobileWarning(true);
+    } else {
+      setSettingsOpen(true);
+    }
+  };
 
   return (
     <Box sx={backgroundWrapperSx}>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          width: '100%',
-          px: 2,
-          position: 'relative',
-          zIndex: 1
-        }}
-      >
-        {/* Logo in corner */}
+      <Box sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+        pointerEvents: 'auto',
+        px: { xs: 1, md: 0 },
+      }}>
         <LogoWithAnimatedOutline />
-
-        {/* Welcome Text with Animation */}
+        {/* Welcome and Slogan, reorganized for mobile */}
         <Box sx={{
-          mb: 8,
+          mb: { xs: 3, md: 8 },
+          mt: { xs: 2, md: 0 },
           textAlign: 'center',
+          width: '100%',
+          maxWidth: 700,
+          mx: 'auto',
           animation: 'fadeInUp 1s ease-out',
           '@keyframes fadeInUp': {
             '0%': {
@@ -716,13 +730,13 @@ function Landing({ onStart }) {
           <Typography
             variant="h1"
             sx={{
-              fontSize: { xs: '2.5rem', md: '4rem' },
+              fontSize: { xs: '2.3rem', md: '4rem' }, // bigger on mobile
               fontWeight: 800,
               background: 'linear-gradient(45deg, #5FFBF1 0%, #3BA9FF 50%, #A385FF 100%)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              mb: 2,
+              mb: { xs: 1, md: 2 },
               letterSpacing: '-0.02em',
               backgroundSize: '300% 100%',
               animation: 'gradientFlow 6s ease-in-out infinite alternate',
@@ -745,8 +759,8 @@ function Landing({ onStart }) {
               fontWeight: 500,
               maxWidth: '700px',
               mx: 'auto',
-              mb: 4,
-              fontSize: { xs: '1rem', md: '1.25rem' },
+              mb: { xs: 3, md: 4 }, // more space below slogan on mobile
+              fontSize: { xs: '1.13rem', md: '1.25rem' }, // bigger on mobile
               letterSpacing: '0.12em',
               color: '#111',
               textShadow: '0 2px 8px rgba(44, 62, 80, 0.08)',
@@ -770,18 +784,18 @@ function Landing({ onStart }) {
             <span style={{ display: 'block', fontWeight: 500 }}>Real Cases. Real Feedback. Real Results.</span>
           </Typography>
         </Box>
-
-        {/* Start Button */}
+        {/* Start Button, bigger on mobile and spaced from text */}
         <Button
           variant="contained"
           color="primary"
-          size="large"
+          size={isMobile ? 'medium' : 'large'}
           sx={{
-            px: 8,
-            py: 3,
-            fontSize: 28,
+            px: { xs: 5, md: 8 }, // bigger on mobile
+            py: { xs: 2, md: 3 }, // bigger on mobile
+            fontSize: { xs: 22, md: 28 }, // bigger on mobile
             borderRadius: 4,
-            mb: 5,
+            mb: { xs: 3, md: 5 },
+            mt: { xs: 2, md: 0 }, // more space above button on mobile
             fontWeight: 800,
             letterSpacing: 1.5,
             color: '#fff',
@@ -812,213 +826,212 @@ function Landing({ onStart }) {
               WebkitTextFillColor: 'transparent',
             },
           }}
-          onClick={() => {
-            console.debug('[CaseAI] START PRACTICE CASE button clicked');
-            setSettingsOpen(true);
-          }}
+          onClick={handleStartClick}
         >
           <span className="gradient-text">START PRACTICE CASE</span>
         </Button>
-
-        {/* Feature Cards */}
-        <Grid container spacing={6} justifyContent="center" alignItems="stretch" sx={{ maxWidth: 1100, mt: 0, mb: 0, display: { xs: 'block', md: 'flex' }, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
-          <Grid sx={{ 
-            width: { xs: '100%', md: '33.33%' },
-            flexShrink: 0,
-            flexGrow: 0
-          }}>
-            <Card elevation={0} sx={{ 
-              borderRadius: 4, 
-              p: 3, 
-              minHeight: 220, 
-              height: '100%', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              bgcolor: '#f8fafc',
-              border: '2.5px solid #000',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
-              position: 'relative',
-              overflow: 'visible',
-              transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
-              '&:hover': {
-                background: '#fff',
-                filter: 'brightness(1.15)',
-                transform: 'translateY(-4px)',
-              },
-              '::after': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                left: '-12px',
-                right: '-12px',
-                bottom: '-10px',
-                height: '10px',
-                borderBottomLeftRadius: '12px',
-                borderBottomRightRadius: '12px',
-                background: 'linear-gradient(90deg, #2DEDFB 0%, #256EA0 50%, #6C38FF 100%)',
-                backgroundSize: '300% 300%',
-                opacity: 0,
-                filter: 'blur(12px)',
-                transition: 'opacity 0.08s',
-                zIndex: 1,
-                animation: 'blueFlow 3s linear infinite alternate',
-              },
-              '&:hover::after': {
-                opacity: 0.5,
-                backgroundPosition: '100% 0',
-              },
-              '@keyframes blueFlow': {
-                '0%': { backgroundPosition: '0% 0' },
-                '100%': { backgroundPosition: '100% 0' },
-              },
+        {/* Feature Cards: only show on desktop */}
+        {!isMobile && (
+          <Grid container spacing={6} justifyContent="center" alignItems="stretch" sx={{ maxWidth: 1100, mt: 0, mb: 0, display: { xs: 'block', md: 'flex' }, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+            <Grid sx={{ 
+              width: { xs: '100%', md: '33.33%' },
+              flexShrink: 0,
+              flexGrow: 0
             }}>
-              <Avatar sx={{ bgcolor: '#2563eb', mb: 2, width: 64, height: 64 }}>
-                <BarChartIcon fontSize="large" />
-              </Avatar>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, textAlign: 'center', color: '#000' }}>
-                Real Business Cases
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#000' }} align="center">
-                Practice with actual MBB-style cases covering market entry, M&A, pricing strategy, and more
-              </Typography>
-            </Card>
-          </Grid>
-          <Grid sx={{ 
-            width: { xs: '100%', md: '33.33%' },
-            flexShrink: 0,
-            flexGrow: 0
-          }}>
-            <Card elevation={0} sx={{ 
-              borderRadius: 4, 
-              p: 3, 
-              minHeight: 220, 
-              height: '100%', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              bgcolor: '#f8fafc',
-              border: '2.5px solid #000',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
-              position: 'relative',
-              overflow: 'visible',
-              transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
-              '&:hover': {
-                background: '#fff',
-                filter: 'brightness(1.15)',
-                transform: 'translateY(-4px)',
-              },
-              '::after': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                left: '-12px',
-                right: '-12px',
-                bottom: '-10px',
-                height: '10px',
-                borderBottomLeftRadius: '12px',
-                borderBottomRightRadius: '12px',
-                background: 'linear-gradient(90deg, #2DEDFB 0%, #256EA0 50%, #6C38FF 100%)',
-                backgroundSize: '300% 300%',
-                opacity: 0,
-                filter: 'blur(12px)',
-                transition: 'opacity 0.08s',
-                zIndex: 1,
-                animation: 'blueFlow 3s linear infinite alternate',
-              },
-              '&:hover::after': {
-                opacity: 0.5,
-                backgroundPosition: '100% 0',
-              },
-              '@keyframes blueFlow': {
-                '0%': { backgroundPosition: '0% 0' },
-                '100%': { backgroundPosition: '100% 0' },
-              },
+              <Card elevation={0} sx={{ 
+                borderRadius: 4, 
+                p: 3, 
+                minHeight: 220, 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                backgroundColor: '#fff',
+                opacity: 1, // <-- force full opacity
+                border: '2.5px solid #000',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+                position: 'relative',
+                overflow: 'visible',
+                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
+                '&:hover': {
+                  background: '#fff',
+                  filter: 'brightness(1.15)',
+                  transform: 'translateY(-4px)',
+                },
+                '::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: '-12px',
+                  right: '-12px',
+                  bottom: '-10px',
+                  height: '10px',
+                  borderBottomLeftRadius: '12px',
+                  borderBottomRightRadius: '12px',
+                  background: 'linear-gradient(90deg, #2DEDFB 0%, #256EA0 50%, #6C38FF 100%)',
+                  backgroundSize: '300% 300%',
+                  opacity: 0,
+                  filter: 'blur(12px)',
+                  transition: 'opacity 0.08s',
+                  zIndex: 1,
+                  animation: 'blueFlow 3s linear infinite alternate',
+                },
+                '&:hover::after': {
+                  opacity: 0.5,
+                  backgroundPosition: '100% 0',
+                },
+                '@keyframes blueFlow': {
+                  '0%': { backgroundPosition: '0% 0' },
+                  '100%': { backgroundPosition: '100% 0' },
+                },
+              }}>
+                <Avatar sx={{ bgcolor: '#2563eb', mb: 2, width: 64, height: 64 }}>
+                  <BarChartIcon fontSize="large" />
+                </Avatar>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, textAlign: 'center', color: '#000' }}>
+                  Real Business Cases
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#000' }} align="center">
+                  Practice with actual MBB-style cases covering market entry, M&A, pricing strategy, and more
+                </Typography>
+              </Card>
+            </Grid>
+            <Grid sx={{ 
+              width: { xs: '100%', md: '33.33%' },
+              flexShrink: 0,
+              flexGrow: 0
             }}>
-              <Avatar sx={{ bgcolor: '#0ea5e9', mb: 2, width: 64, height: 64 }}>
-                <ShowChartIcon fontSize="large" />
-              </Avatar>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, textAlign: 'center', color: '#000' }}>
-                Real-time Analysis
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#000' }} align="center">
-                Get instant feedback on your structure, insights, and quantitative analysis skills
-              </Typography>
-            </Card>
-          </Grid>
-          <Grid sx={{ 
-            width: { xs: '100%', md: '33.33%' },
-            flexShrink: 0,
-            flexGrow: 0
-          }}>
-            <Card elevation={0} sx={{ 
-              borderRadius: 4, 
-              p: 3, 
-              minHeight: 220, 
-              height: '100%', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              bgcolor: '#f8fafc',
-              border: '2.5px solid #000',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
-              position: 'relative',
-              overflow: 'visible',
-              transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
-              '&:hover': {
-                background: '#fff',
-                filter: 'brightness(1.15)',
-                transform: 'translateY(-4px)',
-              },
-              '::after': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                left: '-12px',
-                right: '-12px',
-                bottom: '-10px',
-                height: '10px',
-                borderBottomLeftRadius: '12px',
-                borderBottomRightRadius: '12px',
-                background: 'linear-gradient(90deg, #2DEDFB 0%, #256EA0 50%, #6C38FF 100%)',
-                backgroundSize: '300% 300%',
-                opacity: 0,
-                filter: 'blur(12px)',
-                transition: 'opacity 0.08s',
-                zIndex: 1,
-                animation: 'blueFlow 3s linear infinite alternate',
-              },
-              '&:hover::after': {
-                opacity: 0.5,
-                backgroundPosition: '100% 0',
-              },
-              '@keyframes blueFlow': {
-                '0%': { backgroundPosition: '0% 0' },
-                '100%': { backgroundPosition: '100% 0' },
-              },
+              <Card elevation={0} sx={{ 
+                borderRadius: 4, 
+                p: 3, 
+                minHeight: 220, 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                backgroundColor: '#fff',
+                opacity: 1, // <-- force full opacity
+                border: '2.5px solid #000',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+                position: 'relative',
+                overflow: 'visible',
+                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
+                '&:hover': {
+                  background: '#fff',
+                  filter: 'brightness(1.15)',
+                  transform: 'translateY(-4px)',
+                },
+                '::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: '-12px',
+                  right: '-12px',
+                  bottom: '-10px',
+                  height: '10px',
+                  borderBottomLeftRadius: '12px',
+                  borderBottomRightRadius: '12px',
+                  background: 'linear-gradient(90deg, #2DEDFB 0%, #256EA0 50%, #6C38FF 100%)',
+                  backgroundSize: '300% 300%',
+                  opacity: 0,
+                  filter: 'blur(12px)',
+                  transition: 'opacity 0.08s',
+                  zIndex: 1,
+                  animation: 'blueFlow 3s linear infinite alternate',
+                },
+                '&:hover::after': {
+                  opacity: 0.5,
+                  backgroundPosition: '100% 0',
+                },
+                '@keyframes blueFlow': {
+                  '0%': { backgroundPosition: '0% 0' },
+                  '100%': { backgroundPosition: '100% 0' },
+                },
+              }}>
+                <Avatar sx={{ bgcolor: '#0ea5e9', mb: 2, width: 64, height: 64 }}>
+                  <ShowChartIcon fontSize="large" />
+                </Avatar>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, textAlign: 'center', color: '#000' }}>
+                  Real-time Analysis
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#000' }} align="center">
+                  Get instant feedback on your structure, insights, and quantitative analysis skills
+                </Typography>
+              </Card>
+            </Grid>
+            <Grid sx={{ 
+              width: { xs: '100%', md: '33.33%' },
+              flexShrink: 0,
+              flexGrow: 0
             }}>
-              <Avatar sx={{ bgcolor: '#8b5cf6', mb: 2, width: 64, height: 64 }}>
-                <GroupIcon fontSize="large" />
-              </Avatar>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, textAlign: 'center', color: '#000' }}>
-                Expert Guidance
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#000' }} align="center">
-                Learn from patterns of successful candidates and improve with each practice session
-              </Typography>
-            </Card>
+              <Card elevation={0} sx={{ 
+                borderRadius: 4, 
+                p: 3, 
+                minHeight: 220, 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                backgroundColor: '#fff',
+                opacity: 1, // <-- force full opacity
+                border: '2.5px solid #000',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+                position: 'relative',
+                overflow: 'visible',
+                transition: 'transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.25s, filter 0.25s',
+                '&:hover': {
+                  background: '#fff',
+                  filter: 'brightness(1.15)',
+                  transform: 'translateY(-4px)',
+                },
+                '::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: '-12px',
+                  right: '-12px',
+                  bottom: '-10px',
+                  height: '10px',
+                  borderBottomLeftRadius: '12px',
+                  borderBottomRightRadius: '12px',
+                  background: 'linear-gradient(90deg, #2DEDFB 0%, #256EA0 50%, #6C38FF 100%)',
+                  backgroundSize: '300% 300%',
+                  opacity: 0,
+                  filter: 'blur(12px)',
+                  transition: 'opacity 0.08s',
+                  zIndex: 1,
+                  animation: 'blueFlow 3s linear infinite alternate',
+                },
+                '&:hover::after': {
+                  opacity: 0.5,
+                  backgroundPosition: '100% 0',
+                },
+                '@keyframes blueFlow': {
+                  '0%': { backgroundPosition: '0% 0' },
+                  '100%': { backgroundPosition: '100% 0' },
+                },
+              }}>
+                <Avatar sx={{ bgcolor: '#8b5cf6', mb: 2, width: 64, height: 64 }}>
+                  <GroupIcon fontSize="large" />
+                </Avatar>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, textAlign: 'center', color: '#000' }}>
+                  Expert Guidance
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#000' }} align="center">
+                  Learn from patterns of successful candidates and improve with each practice session
+                </Typography>
+              </Card>
+            </Grid>
           </Grid>
-        </Grid>
-
+        )}
         <CaseSettingsDialog
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
           onStart={() => {
             setSettingsOpen(false);
-            // Reset all state before starting new case
             onStart({
               ...caseOptions,
               resetState: true
@@ -1026,6 +1039,10 @@ function Landing({ onStart }) {
           }}
           caseOptions={caseOptions}
           setCaseOptions={setCaseOptions}
+        />
+        <MobileWarningModal 
+          open={showMobileWarning} 
+          onClose={() => setShowMobileWarning(false)} 
         />
       </Box>
     </Box>
@@ -1046,6 +1063,75 @@ const cleanupAudio = async (sessionId) => {
     // Silently ignore errors
   }
 };
+
+// Add device detection utility
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+};
+
+// Add mobile warning modal component
+function MobileWarningModal({ open, onClose }) {
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          maxWidth: '90%',
+          width: 400,
+          mx: 'auto',
+          p: 2,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        textAlign: 'center', 
+        fontWeight: 700,
+        fontSize: '1.5rem',
+        color: '#333',
+        pb: 1
+      }}>
+        Desktop Only
+      </DialogTitle>
+      <DialogContent sx={{ textAlign: 'center', py: 2 }}>
+        <Typography sx={{ 
+          fontSize: '1.1rem',
+          color: '#666',
+          mb: 2
+        }}>
+          Sorry, for the time being this is a desktop only software.
+        </Typography>
+        <Typography sx={{ 
+          fontSize: '0.9rem',
+          color: '#888',
+          fontStyle: 'italic'
+        }}>
+          Please visit us on a desktop computer for the best experience.
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+        <Button
+          onClick={onClose}
+          variant="contained"
+          sx={{
+            px: 4,
+            py: 1,
+            borderRadius: 2,
+            fontWeight: 600,
+            background: 'linear-gradient(45deg, #000 30%, #333 90%)',
+            '&:hover': {
+              background: 'linear-gradient(45deg, #333 30%, #000 90%)',
+            }
+          }}
+        >
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
 
 function App() {
   const [showInterview, setShowInterview] = useState(false);
