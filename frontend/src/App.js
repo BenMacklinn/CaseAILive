@@ -494,7 +494,7 @@ function Dashboard({ cases, onClose }) {
   );
 }
 
-function RainbowLoadingDots() {
+function RainbowLoadingDots({ message = "Generating your case..." }) {
   // Animated turquoise-to-purple gradient bouncing dots
   return (
     <Box sx={{
@@ -531,7 +531,7 @@ function RainbowLoadingDots() {
         ))}
       </Box>
       <Typography sx={{ mt: 4, fontWeight: 700, fontSize: 22, color: '#222', letterSpacing: 1.2 }}>
-        Generating your case...
+        {message}
       </Typography>
       <style>{`
         @keyframes gradient-bounce {
@@ -1110,6 +1110,7 @@ function App() {
   const [pendingInitialAudio, setPendingInitialAudio] = useState(null);
   // Add new state for pending response audio
   const [pendingResponseAudio, setPendingResponseAudio] = useState(null);
+  const [isGeneratingReportCard, setIsGeneratingReportCard] = useState(false);
   
   // Add this useEffect near the top of the component, after the state declarations
   useEffect(() => {
@@ -1893,6 +1894,7 @@ function App() {
 
   // Handler for ending the case and getting feedback
   const endCaseAndGetFeedback = async () => {
+    setIsGeneratingReportCard(true);
     setIsProcessing(true);
     try {
       const formData = new FormData();
@@ -1912,6 +1914,7 @@ function App() {
       setError('Failed to end case and get feedback.');
     } finally {
       setIsProcessing(false);
+      setIsGeneratingReportCard(false);
     }
   };
 
@@ -2015,6 +2018,28 @@ function App() {
       onError={(e) => console.error('[CaseAI] Audio element error:', e)}
     />
   );
+
+  // Custom RainbowLoadingDots for report card
+  function ReportCardLoading() {
+    return (
+      <Box sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        bgcolor: 'rgba(255,255,255,0.98)',
+        zIndex: 3000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        transition: 'opacity 0.4s',
+      }}>
+        <RainbowLoadingDots message="Generating Report Card..." />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -2815,6 +2840,7 @@ function App() {
               <Button onClick={() => { setShowFeedbackConfirm(false); endCaseAndGetFeedback(); }} variant="contained" sx={{ borderRadius: 2, fontWeight: 700, px: 4, background: 'linear-gradient(45deg, #000 30%, #333 90%)', color: '#fff', boxShadow: 'none', '&:hover': { background: 'linear-gradient(45deg, #111 30%, #444 90%)', boxShadow: 'none' } }}>Yes, End Case</Button>
             </DialogActions>
           </Dialog>
+          {isGeneratingReportCard && <ReportCardLoading />}
         </>
       ) : (
         <Landing onStart={(opts) => {
