@@ -32,6 +32,7 @@ from .grading import (
     STAGE_GRADING_CRITERIA, evaluate_stage, calculate_transition_quality,
     generate_stage_feedback
 )
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -223,6 +224,242 @@ async def root():
     """
     return RedirectResponse(url="/docs")
 
+# Add new phase tracking class
+class PhaseTracker:
+    def __init__(self):
+        self.current_phase = 0
+        self.phase_depth = {}  # Track depth of discussion in each phase
+        self.phase_transitions = []  # Track explicit phase transitions
+        self.last_transition_time = None
+        self.min_phase_duration = 30  # Reduced minimum duration to 30 seconds
+        self.topic_depth = {}  # Track depth of specific topics within phases
+        self.conversation_context = []  # Track recent conversation context
+        self.max_context_length = 10  # Keep last 10 messages for context
+        
+    def should_transition_phase(self, conversation_history: List[Dict], current_time: float) -> bool:
+        """Determine if we should transition to the next phase based on content, timing, and conversation flow."""
+        if not self.last_transition_time:
+            self.last_transition_time = current_time
+            return False
+            
+        # Update conversation context
+        self._update_conversation_context(conversation_history)
+        
+        # Get the last few messages for context
+        recent_messages = conversation_history[-5:] if len(conversation_history) >= 5 else conversation_history
+        
+        # Check for explicit transition requests
+        explicit_transition = self._check_explicit_transition(recent_messages[-1] if recent_messages else None)
+        if explicit_transition:
+            return True
+            
+        # Don't force transitions if the conversation is productive
+        if self._is_conversation_productive(recent_messages):
+            return False
+            
+        # Check if we've met minimum phase requirements
+        phase_completion = self._analyze_phase_completion(recent_messages)
+        
+        # Allow transition if both time and content requirements are met
+        time_elapsed = current_time - self.last_transition_time
+        return phase_completion and time_elapsed >= self.min_phase_duration
+        
+    def _update_conversation_context(self, conversation_history: List[Dict]):
+        """Update the conversation context with recent messages."""
+        if not conversation_history:
+            return
+            
+        # Add new messages to context
+        self.conversation_context.extend(conversation_history[-self.max_context_length:])
+        
+        # Trim context if too long
+        if len(self.conversation_context) > self.max_context_length:
+            self.conversation_context = self.conversation_context[-self.max_context_length:]
+            
+        # Update topic depth based on context
+        self._update_topic_depth()
+        
+    def _update_topic_depth(self):
+        """Update the depth of discussion for each topic."""
+        if not self.conversation_context:
+            return
+            
+        # Define topic keywords for each phase
+        topic_keywords = {
+            0: {  # Clarifying phase
+                "market": ["market", "industry", "competition", "customer"],
+                "company": ["company", "business", "organization", "firm"],
+                "objective": ["objective", "goal", "target", "aim"]
+            },
+            1: {  # Framework phase
+                "structure": ["framework", "structure", "approach", "method"],
+                "analysis": ["analyze", "evaluate", "assess", "examine"],
+                "strategy": ["strategy", "plan", "tactic", "initiative"]
+            },
+            2: {  # Quantitative phase
+                "calculation": ["calculate", "compute", "math", "number"],
+                "data": ["data", "metric", "figure", "statistic"],
+                "assumption": ["assume", "assumption", "estimate", "projection"]
+            },
+            3: {  # Qualitative phase
+                "analysis": ["analyze", "evaluate", "assess", "examine"],
+                "strategy": ["strategy", "plan", "tactic", "initiative"],
+                "implementation": ["implement", "execute", "roll out", "deploy"]
+            },
+            4: {  # CEO synthesis phase
+                "recommendation": ["recommend", "suggest", "propose", "advise"],
+                "risk": ["risk", "threat", "challenge", "concern"],
+                "action": ["action", "step", "measure", "initiative"]
+            }
+        }
+        
+        # Update depth for each topic
+        current_topics = topic_keywords.get(self.current_phase, {})
+        for topic, keywords in current_topics.items():
+            if topic not in self.topic_depth:
+                self.topic_depth[topic] = 0
+                
+            # Count keyword occurrences in recent context
+            for message in self.conversation_context[-3:]:  # Look at last 3 messages
+                if message["role"] == "user":
+                    for keyword in keywords:
+                        if keyword in message["content"].lower():
+                            self.topic_depth[topic] += 1
+                            
+    def _is_conversation_productive(self, recent_messages: List[Dict]) -> bool:
+        """Check if the current conversation is productive and should continue."""
+        if not recent_messages:
+            return False
+            
+        # Check if the last message was from the user
+        last_message = recent_messages[-1]
+        if last_message["role"] != "user":
+            return False
+            
+        # Check for signs of productive discussion
+        productive_indicators = [
+            # Questions or clarifications
+            "?", "could you", "can you", "would you", "what if",
+            # Deep analysis
+            "because", "therefore", "thus", "consequently",
+            # New insights
+            "interesting", "insight", "perspective", "consider",
+            # Building on previous points
+            "furthermore", "moreover", "additionally", "also",
+            # Specific examples
+            "for example", "specifically", "in particular", "such as"
+        ]
+        
+        # Check if the message contains productive indicators
+        content = last_message["content"].lower()
+        has_productive_indicators = any(indicator in content for indicator in productive_indicators)
+        
+        # Check if we're exploring a topic in depth
+        current_topic_depth = max(self.topic_depth.values()) if self.topic_depth else 0
+        is_deep_exploration = current_topic_depth >= 3  # At least 3 related points discussed
+        
+        return has_productive_indicators or is_deep_exploration
+        
+    def _analyze_phase_completion(self, recent_messages: List[Dict]) -> bool:
+        """Analyze if the current phase has been sufficiently explored."""
+        if not recent_messages:
+            return False
+            
+        # Get the phase-specific criteria
+        phase_criteria = PHASE_COMPLETION_CRITERIA.get(self.current_phase, {})
+        if not phase_criteria:
+            return False
+            
+        # Count relevant elements in recent messages
+        element_counts = self._count_phase_elements(recent_messages, phase_criteria)
+        
+        # Check if we've met the minimum requirements
+        min_requirements_met = all(count >= min_count for count, min_count in zip(element_counts, phase_criteria["min_counts"]))
+        
+        # Check if we've explored topics in sufficient depth
+        topic_depth_met = any(depth >= 3 for depth in self.topic_depth.values())
+        
+        return min_requirements_met and topic_depth_met
+        
+    def _check_explicit_transition(self, last_message: Dict) -> bool:
+        """Check if the last message explicitly requests a phase transition."""
+        if not last_message or last_message["role"] != "user":
+            return False
+            
+        transition_phrases = [
+            "ready to move on",
+            "let's proceed to",
+            "shall we move to",
+            "can we move on",
+            "next phase",
+            "next step",
+            "i think we've covered",
+            "shall we move forward",
+            "can we move forward",
+            "i'm ready for the next",
+            "let's move forward",
+            "shall we continue",
+            "can we continue"
+        ]
+        
+        return any(phrase in last_message["content"].lower() for phrase in transition_phrases)
+        
+    def _count_phase_elements(self, messages: List[Dict], criteria: Dict) -> List[int]:
+        """Count relevant elements in messages based on phase criteria."""
+        counts = [0] * len(criteria["min_counts"])
+        for message in messages:
+            if message["role"] == "user":
+                for i, element in enumerate(criteria["elements"]):
+                    if self._check_element_presence(message["content"], element):
+                        counts[i] += 1
+        return counts
+        
+    def _check_element_presence(self, content: str, element: str) -> bool:
+        """Check if a specific element is present in the content."""
+        # This would be expanded based on the specific elements we're looking for
+        element_patterns = {
+            "clarifying_questions": r"\?",
+            "framework_elements": r"(first|second|third|finally|therefore|thus)",
+            "quantitative_analysis": r"(calculate|compute|math|number|assume)",
+            "qualitative_analysis": r"(strategy|strategic|long-term|competitive|market|customer)",
+            "synthesis": r"(recommend|conclude|summary|key takeaway)"
+        }
+        
+        pattern = element_patterns.get(element, "")
+        return bool(re.search(pattern, content.lower())) if pattern else False
+
+# Define phase completion criteria
+PHASE_COMPLETION_CRITERIA = {
+    0: {  # Clarifying phase
+        "elements": ["clarifying_questions", "understanding_check"],
+        "min_counts": [1, 1],  # Reduced minimum requirements
+        "min_duration": 30  # Reduced minimum duration
+    },
+    1: {  # Framework phase
+        "elements": ["framework_elements", "mECE_structure"],
+        "min_counts": [2, 1],  # Reduced minimum requirements
+        "min_duration": 60
+    },
+    2: {  # Quantitative phase
+        "elements": ["quantitative_analysis", "assumptions"],
+        "min_counts": [1, 1],  # Reduced minimum requirements
+        "min_duration": 90
+    },
+    3: {  # Qualitative phase
+        "elements": ["qualitative_analysis", "strategic_thinking"],
+        "min_counts": [2, 1],  # Reduced minimum requirements
+        "min_duration": 90
+    },
+    4: {  # CEO synthesis phase
+        "elements": ["synthesis", "recommendation"],
+        "min_counts": [1, 1],
+        "min_duration": 60
+    }
+}
+
+# Initialize phase trackers for each session
+phase_trackers = {}
+
 @app.post("/api/transcribe")
 async def transcribe_audio(
     file: Optional[UploadFile] = File(None),
@@ -274,6 +511,13 @@ async def transcribe_audio(
         else:
             raise HTTPException(status_code=400, detail="No input provided.")
 
+        # Initialize phase tracker for new sessions
+        if session_id not in phase_trackers:
+            phase_trackers[session_id] = PhaseTracker()
+
+        # Get current time for phase tracking
+        current_time = time.time()
+
         # Track the current phase in the session
         if session_id not in conversation_history:
             conversation_history[session_id] = []
@@ -283,8 +527,13 @@ async def transcribe_audio(
         # Add user's response to conversation history
         conversation_history[session_id].append({"role": "user", "content": user_text})
 
+        # Check if we should transition phases
+        if phase_trackers[session_id].should_transition_phase(conversation_history[session_id], current_time):
+            phase_trackers[session_id].current_phase += 1
+            phase_trackers[session_id].last_transition_time = current_time
+
         # Only end the case after the CEO synthesis question (phase 5)
-        if current_phase >= 5:
+        if phase_trackers[session_id].current_phase >= 5:
             # Generate a context-aware closing message
             try:
                 ceo_response = user_text
@@ -331,6 +580,7 @@ async def transcribe_audio(
             }
 
         # Use a specific prompt for each phase
+        current_phase = phase_trackers[session_id].current_phase
         if current_phase < len(PHASE_PROMPTS):
             phase_prompt = PHASE_PROMPTS[current_phase]
         else:
