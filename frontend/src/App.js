@@ -503,24 +503,7 @@ function Dashboard({ cases, onClose }) {
 // Shared cycling quote component for loading screens
 function CyclingQuotes() {
   const quotes = React.useMemo(() => {
-    const arr = [
-      "You need some sun.",
-      "Calm down its loading.",
-      "We had budget constraints, please donate... please.",
-      "Four eggs, sourdough bread, and a green apple.",
-      "I'm not sure if you're ready for this.",
-      "Vibe coding is hard.",
-      "Hey, you look great today.",
-      "UFC, KFC, GPT, Lakers in 5",
-      "No tarrifs on CaseAI.",
-      "Seahawks should have ran the ball.",
-      "Why are you staring?",
-      "Looks like you need some sleep.",
-      "We spent all of our budget on this loading screen. Worth it?",
-      "Sorry for the delay, blame the intern.",
-      "We are hiring full stack vibe coders.",
-      "Thanks for taking your time to be here! Love the CaseAI team."
-    ];
+    const arr = [];
     // Fisher-Yates shuffle
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -560,7 +543,7 @@ function CyclingQuotes() {
         fontStyle: 'italic',
       }}
     >
-      {`"${quotes[quoteIndex]}"`}
+      {quotes.length > 0 ? `"${quotes[quoteIndex]}"` : ''}
     </Typography>
   );
 }
@@ -1297,58 +1280,8 @@ function LinkedInFloatingButton() {
           });
         }}
       >
-        <LinkedInIcon sx={{ fontSize: 28 }} />
+        <LinkedInIcon />
       </IconButton>
-      {!isMobile && (
-        <Button
-          href="https://docs.google.com/forms/d/e/1FAIpQLSfs_huqeb4Fe7PLshbH0qI3N20PVYt8D6vDDX1vzbw4TOwGgA/viewform?usp=header"
-          target="_blank"
-          rel="noopener noreferrer"
-          variant="contained"
-          sx={{
-            backgroundColor: '#fff',
-            color: '#111',
-            fontWeight: 700,
-            borderRadius: 3,
-            height: 48,
-            minWidth: 120,
-            px: 3,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
-            textTransform: 'none',
-            fontSize: 16,
-            border: '2px solid #3BA9FF',
-            transition: 'all 0.3s cubic-bezier(.4,2,.6,1)',
-            ml: 1,
-            backgroundClip: 'padding-box',
-            '& .gradient-text': {
-              background: 'linear-gradient(45deg, #5FFBF1 0%, #3BA9FF 50%, #A385FF 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              color: 'transparent',
-              fontWeight: 700,
-            },
-            '&:hover': {
-              backgroundColor: '#f3f4f6',
-              borderColor: '#A385FF',
-              transform: 'translateY(-4px) scale(1.05)',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-            },
-            '&:active': {
-              transform: 'translateY(-2px) scale(0.98)',
-            },
-          }}
-          onClick={() => {
-            ReactGA.event({
-              category: 'Button',
-              action: 'Click',
-              label: 'User Feedback'
-            });
-          }}
-        >
-          <span className="gradient-text">User Feedback</span>
-        </Button>
-      )}
     </Box>
   );
 }
@@ -1420,7 +1353,6 @@ function App() {
   // Disclaimer popup state
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [showDisclaimer, setShowDisclaimer] = useState(!isMobile);
   
   // Add this useEffect near the top of the component, after the state declarations
   useEffect(() => {
@@ -3134,26 +3066,6 @@ function App() {
       )}
       {/* Move LinkedInFloatingButton outside the conditional so it always renders */}
       <LinkedInFloatingButton />
-      {/* Desktop-only disclaimer popup */}
-      {!isMobile && (
-        <Dialog open={showDisclaimer} onClose={() => setShowDisclaimer(false)} maxWidth="xs" fullWidth>
-          <Box sx={{ bgcolor: '#fdecea', p: 3, borderRadius: 0, border: '1.5px solid #fca5a5', position: 'relative' }}>
-            <IconButton
-              onClick={() => setShowDisclaimer(false)}
-              sx={{ position: 'absolute', top: 8, right: 8, color: '#b91c1c' }}
-              size="small"
-            >
-              <CloseIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ color: '#b91c1c', fontWeight: 700, mb: 1 }}>
-              Notice Regarding Loading Times
-            </Typography>
-            <Typography sx={{ color: '#7f1d1d', fontSize: 16, fontWeight: 500 }}>
-              Due to high user demand and current infrastructure limitations, you may experience longer loading times during peak periods. We appreciate your patience and understanding as we continue to optimize and scale our platform to serve you better.
-            </Typography>
-          </Box>
-        </Dialog>
-      )}
     </>
   );
 }
