@@ -1,0 +1,127 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  background-color: #282c34;
+  color: white;
+}
+
+.App-header {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+h1 {
+  color: #61dafb;
+  margin-bottom: 40px;
+}
+
+.question-box {
+  background-color: #1a1d23;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 90%;
+  margin: 20px 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.question-box h3 {
+  color: #61dafb;
+  margin-top: 0;
+}
+
+.question-box p {
+  line-height: 1.6;
+  text-align: left;
+}
+
+.controls {
+  margin: 20px 0;
+}
+
+button {
+  background-color: #61dafb;
+  color: #282c34;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #4fa8d1;
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  background-color: #4a4f5a;
+  cursor: not-allowed;
+  transform: none;
+}
+
+button.recording {
+  background-color: #ff4444;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.loading {
+  font-size: 20px;
+  color: #61dafb;
+  margin: 20px 0;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+audio {
+  width: 90%;
+  max-width: 600px;
+  margin-top: 20px;
+}
+
+.error-message {
+  background-color: rgba(255, 68, 68, 0.1);
+  border: 1px solid #ff4444;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 20px 0;
+  max-width: 600px;
+  width: 90%;
+}
+
+.error-message p {
+  margin: 0;
+  color: #ff4444;
+}
+
+.error-message .error-hint {
+  color: #888;
+  font-size: 0.9em;
+  margin-top: 8px;
+} 
