@@ -55,12 +55,23 @@ import CloseIcon from '@mui/icons-material/Close';
 import ReactGA from 'react-ga4';
 
 // Set API_BASE_URL based on environment
-let API_BASE_URL;
-if (typeof window !== 'undefined' && (window.location.hostname.includes('caseai.ca') || window.location.hostname.includes('onrender.com'))) {
-  API_BASE_URL = 'https://benmacklinbenlewycaseai.onrender.com';
-} else {
-  API_BASE_URL = 'http://localhost:8000';
-}
+const getApiBaseUrl = () => {
+  const configuredUrl = process.env.REACT_APP_API_BASE_URL;
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, '');
+  }
+
+  if (typeof window !== 'undefined') {
+    const { hostname } = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
+  }
+
+  return 'https://benmacklinbenlewycaseai.onrender.com';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const CASE_LENGTHS = [
   { label: 'QUICK', value: 'mini' },
