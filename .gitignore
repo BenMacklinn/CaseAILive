@@ -5,3 +5,4 @@ audio/
 .venv/
 frontend/node_modules/
 frontend/node_modules/
+.vercel
