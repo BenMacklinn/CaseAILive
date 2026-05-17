@@ -68,7 +68,7 @@ const getApiBaseUrl = () => {
     }
   }
 
-  return 'https://benmacklinbenlewycaseai.onrender.com';
+  return '';
 };
 
 const API_BASE_URL = getApiBaseUrl();

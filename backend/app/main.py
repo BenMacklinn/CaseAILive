@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
+IS_VERCEL = bool(os.getenv("VERCEL"))
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -65,8 +66,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create audio directory if it doesn't exist
-AUDIO_DIR = Path(__file__).parent / "audio"
+# Vercel functions can only write to /tmp. Local development keeps using
+# backend/app/audio so existing local behavior remains unchanged.
+AUDIO_DIR = Path("/tmp/caseai-audio") if IS_VERCEL else Path(__file__).parent / "audio"
 AUDIO_DIR.mkdir(exist_ok=True)
 
 # Mount the audio directory
@@ -75,28 +77,27 @@ app.mount("/audio", StaticFiles(directory=str(AUDIO_DIR)), name="audio")
 # Configure API keys
 openai_key = os.getenv("OPENAI_API_KEY")
 
-if not openai_key:
-    raise HTTPException(
-        status_code=500,
-        detail="OpenAI API key not found. Please check your .env file."
-    )
+class MissingOpenAIClient:
+    def __getattr__(self, _name):
+        raise RuntimeError("OPENAI_API_KEY is not configured for this deployment.")
 
 # Initialize OpenAI client (v1.x style)
-client = openai.OpenAI()
+client = openai.OpenAI(api_key=openai_key) if openai_key else MissingOpenAIClient()
 
 def get_openai_client() -> OpenAI:
     """Dependency to get OpenAI client."""
     return client
 
 # --- User Auth & DB Setup ---
-SECRET_KEY = "supersecretkey"  # Change this in production
+SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")  # Change this in production
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 # Initialize SQLite DB
-conn = sqlite3.connect("caseai.db", check_same_thread=False)
+DB_PATH = Path("/tmp/caseai.db") if IS_VERCEL else Path("caseai.db")
+conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -214,8 +215,9 @@ def cleanup_old_audio_files():
                 logging.error(f"Error deleting old audio file {audio_file}: {e}")
         time.sleep(300)  # Run every 5 minutes
 
-# Start the background cleanup thread
-threading.Thread(target=cleanup_old_audio_files, daemon=True).start()
+# Start the background cleanup thread outside serverless runtimes.
+if not IS_VERCEL:
+    threading.Thread(target=cleanup_old_audio_files, daemon=True).start()
 
 @app.get("/")
 async def root():
@@ -1350,6 +1352,9 @@ async def end_case(session_id: str = Form(...)):
 # Periodic cleanup of old audio files (older than 20 minutes)
 @app.on_event("startup")
 async def startup_event():
+    if IS_VERCEL:
+        return
+
     async def cleanup_old_audio():
         while True:
             try:

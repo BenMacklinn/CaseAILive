@@ -1,6 +1,5 @@
 .DS_Store
 caseai.db
 *.db
-backend/
 frontend/build/
 frontend/node_modules/
